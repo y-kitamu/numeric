@@ -1,8 +1,11 @@
-use std::ops::{Index, IndexMut};
+use std::{
+    ops::{Index, IndexMut},
+    ptr,
+};
 
 pub mod linalg;
 
-struct Matrix<T>
+pub struct Matrix<T>
 where
     T: Clone,
 {
@@ -36,6 +39,16 @@ where
         self.rows = new_rows;
         self.cols = new_cols;
         self.data = vec![val; self.rows * self.cols];
+    }
+
+    pub fn swap_rows(&mut self, rhs: usize, lhs: usize) {
+        unsafe {
+            ptr::swap_nonoverlapping(
+                self[rhs].as_mut_ptr(),
+                self[lhs].as_mut_ptr(),
+                self[rhs].len(),
+            );
+        }
     }
 }
 
@@ -79,6 +92,10 @@ mod tests {
         assert_eq!(mat[0][0], 1);
         assert_eq!(mat[1].len(), cols);
         assert_eq!(mat[2][3], 12);
+
+        mat.swap_rows(0, 1);
+        assert_eq!(mat[0][0], 5);
+        assert_eq!(mat[1][2], 3);
 
         mat[2][3] = 8;
         assert_eq!(mat[2][3], 8);
