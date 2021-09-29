@@ -1,10 +1,31 @@
 use std::{
-    ops::{Index, IndexMut},
+    ops::{Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
     ptr,
 };
 
+use num::ToPrimitive;
+
 pub mod linalg;
 
+pub trait MatLinAlgBound:
+    Copy
+    + Clone
+    + ToPrimitive
+    + MulAssign
+    + Mul
+    + Sub
+    + SubAssign
+    + PartialOrd
+    + From<f32>
+    + From<<Self as std::ops::Mul>::Output>
+    + From<<Self as std::ops::Sub>::Output>
+{
+}
+
+impl MatLinAlgBound for f32 {}
+impl MatLinAlgBound for f64 {}
+
+#[derive(Debug)]
 pub struct Matrix<T>
 where
     T: Clone,
