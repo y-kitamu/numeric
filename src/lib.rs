@@ -30,8 +30,8 @@ pub struct Matrix<T>
 where
     T: Clone,
 {
-    rows: usize,
-    cols: usize,
+    nrows: usize,
+    ncols: usize,
     data: Vec<T>,
 }
 
@@ -39,36 +39,47 @@ impl<T> Matrix<T>
 where
     T: Clone,
 {
-    fn new(rows: usize, cols: usize, data: Vec<T>) -> Self {
-        Matrix { rows, cols, data }
+    fn new(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
+        Matrix { nrows, ncols, data }
     }
 
     pub fn rows(&self) -> usize {
-        self.rows
+        self.nrows
     }
 
     pub fn cols(&self) -> usize {
-        self.cols
+        self.ncols
     }
 
     pub fn resize(&mut self, new_rows: usize, new_cols: usize) {
-        self.rows = new_rows;
-        self.cols = new_cols;
+        self.nrows = new_rows;
+        self.ncols = new_cols;
     }
 
     pub fn assign(&mut self, new_rows: usize, new_cols: usize, val: T) {
-        self.rows = new_rows;
-        self.cols = new_cols;
-        self.data = vec![val; self.rows * self.cols];
+        self.nrows = new_rows;
+        self.ncols = new_cols;
+        self.data = vec![val; self.nrows * self.ncols];
     }
 
     pub fn swap_rows(&mut self, rhs: usize, lhs: usize) {
         unsafe {
             ptr::swap_nonoverlapping(
-                self[rhs].as_mut_ptr(),
                 self[lhs].as_mut_ptr(),
+                self[rhs].as_mut_ptr(),
                 self[rhs].len(),
             );
+        }
+    }
+
+    pub fn swap_cols(&mut self, rhs: usize, lhs: usize) {
+        if lhs >= self.ncols || rhs >= self.ncols {
+            return;
+        }
+        unsafe {
+            for i in 0..self.nrows {
+                ptr::swap(self[i].as_mut_ptr().add(rhs), self[i].as_mut_ptr().add(lhs));
+            }
         }
     }
 }
@@ -80,7 +91,7 @@ where
     type Output = [T];
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index * self.cols..(index + 1) * self.cols]
+        &self.data[index * self.ncols..(index + 1) * self.ncols]
     }
 }
 
@@ -89,7 +100,7 @@ where
     T: Clone,
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index * self.cols..(index + 1) * self.cols]
+        &mut self.data[index * self.ncols..(index + 1) * self.ncols]
     }
 }
 
@@ -117,6 +128,10 @@ mod tests {
         mat.swap_rows(0, 1);
         assert_eq!(mat[0][0], 5);
         assert_eq!(mat[1][2], 3);
+
+        mat.swap_cols(1, 0);
+        assert_eq!(mat[0][0], 6);
+        assert_eq!(mat[1][1], 1);
 
         mat[2][3] = 8;
         assert_eq!(mat[2][3], 8);

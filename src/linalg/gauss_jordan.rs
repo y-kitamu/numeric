@@ -18,7 +18,7 @@ where
 
     let mut irow = 0;
     let mut icol = 0;
-    for _ in 0..n {
+    for i in 0..n {
         let mut big: T = 0.0.into();
         for j in 0..n {
             if ipiv[j] != 1 {
@@ -34,26 +34,28 @@ where
             }
         }
         ipiv[icol] += 1;
-
+        indxr.push(irow);
+        indxc.push(icol);
         if irow != icol {
             a.swap_rows(irow, icol);
             b.swap_rows(irow, icol);
         }
-        indxr.push(irow);
-        indxc.push(icol);
 
         if a[icol][icol].to_f32().unwrap().abs() < 1e-7 {
-            return Err(LinAlgError::SingularMatrix("gauss_jordan".to_string()))?;
+            return Err(LinAlgError::SingularMatrix(
+                format!("gauss_jordan : i = {}, irow = {}, icol = {}", i, irow, icol).to_string(),
+            ))?;
         }
 
         let pivinv = 1.0 / a[icol][icol].to_f32().unwrap();
+        a[icol][icol] = 1.0f32.into();
         for l in 0..n {
             let val = a[icol][l].to_f32().unwrap() * pivinv;
             a[icol][l] = val.into();
         }
         for l in 0..m {
             let val = b[icol][l].to_f32().unwrap() * pivinv;
-            b[icol][l] *= val.into();
+            b[icol][l] = val.into();
         }
         for l in 0..n {
             if l != icol {
@@ -71,10 +73,9 @@ where
         }
     }
 
-    for i in n - 1..=0 {
+    for i in (0..n).rev() {
         if indxr[i] != indxc[i] {
-            a.swap_rows(indxr[i], indxc[i]);
-            b.swap_rows(indxr[i], indxc[i]);
+            a.swap_cols(indxr[i], indxc[i]);
         }
     }
 
@@ -91,8 +92,8 @@ mod tests {
         let cols = 2;
         #[rustfmt::skip]
         let da: Vec<f32> = vec![
-            1.0, 0.0,
-            0.0, 1.0
+            1.0, 3.0,
+            1.0, 2.0
         ];
         let db: Vec<f32> = vec![4.0, -3.0];
         let a = Matrix::new(rows, cols, da);
@@ -102,11 +103,33 @@ mod tests {
         assert_eq!(a.cols(), cols);
         println!("{:?}", a);
         println!("{:?}", b);
-        assert!(a[0][0].abs() < 1e-5, "a[0][0] = {}", a[0][0]);
-        assert!(a[1][1].abs() < 1e-5);
-        assert!((a[1][0] - 0.5).abs() < 1e-5);
-        assert!((a[0][1] - 1.0 / 3.0).abs() < 1e-5);
-        assert!((b[0][0] + 1.0).abs() < 1e-5);
-        assert!((b[1][0] - 2.0).abs() < 1e-5);
+        assert!((a[0][0] + 2.0).abs() < 1e-5);
+        assert!((a[1][1] + 1.0).abs() < 1e-5);
+        assert!((a[0][1] - 3.0).abs() < 1e-5);
+        assert!((a[1][0] - 1.0).abs() < 1e-5);
+        assert!((b[0][0] + 17.0).abs() < 1e-5);
+        assert!((b[1][0] - 7.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_gauss_jordan2() {
+        let rows = 3;
+        let cols = 3;
+        #[rustfmt::skip]
+        let da: Vec<f32> = vec![
+            1.0, 1.0, 0.0,
+            1.0, 1.0, 1.0,
+            3.0, 2.0, 1.0,
+        ];
+        let db: Vec<f32> = vec![1.0, 2.0, 1.0];
+        let a = Matrix::new(rows, cols, da);
+        let b = Matrix::new(rows, 1, db);
+        let (a, b) = gauss_jordan(a, b).unwrap();
+
+        println!("{:?}", a);
+        println!("{:?}", b);
+        assert!((b[0][0] + 2.0).abs() < 1e-5);
+        assert!((b[1][0] - 3.0).abs() < 1e-5);
+        assert!((b[2][0] - 1.0).abs() < 1e-5);
     }
 }
