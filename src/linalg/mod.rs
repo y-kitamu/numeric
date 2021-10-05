@@ -7,3 +7,4 @@ pub enum LinAlgError {
 }
 
 pub mod gauss_jordan;
+pub mod lu_decomposition;
