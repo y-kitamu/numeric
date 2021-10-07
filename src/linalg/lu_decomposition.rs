@@ -61,10 +61,12 @@ where
             }
 
             for i in (k + 1)..n {
-                lu[i][k] /= lu[k][k];
+                let scale = lu[k][k];
+                lu[i][k] /= scale;
                 let temp = lu[i][k];
                 for j in (k + 1)..n {
-                    lu[i][j] -= (temp * lu[k][j]).into();
+                    let val = temp * lu[k][j];
+                    lu[i][j] -= val.into();
                 }
             }
         }
