@@ -1,5 +1,5 @@
 use std::{
-    ops::{Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
     ptr,
 };
 
@@ -11,21 +11,24 @@ pub trait MatLinAlgBound:
     Copy
     + Clone
     + ToPrimitive
-    + MulAssign
     + Mul
+    + MulAssign
     + Sub
     + SubAssign
+    + Div
+    + DivAssign
     + PartialOrd
     + From<f32>
     + From<<Self as std::ops::Mul>::Output>
     + From<<Self as std::ops::Sub>::Output>
+    + From<<Self as std::ops::Div>::Output>
 {
 }
 
 impl MatLinAlgBound for f32 {}
 impl MatLinAlgBound for f64 {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix<T>
 where
     T: Clone,
