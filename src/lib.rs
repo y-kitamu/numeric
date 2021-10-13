@@ -1,9 +1,11 @@
 use std::{
-    ops::{Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
     ptr,
 };
 
+use anyhow::Result;
 use num::ToPrimitive;
+use thiserror::Error;
 
 pub mod linalg;
 
@@ -27,6 +29,12 @@ pub trait MatLinAlgBound:
 
 impl MatLinAlgBound for f32 {}
 impl MatLinAlgBound for f64 {}
+
+#[derive(Error, Debug)]
+pub enum MatrixOpsError {
+    #[error("Invalid matrix size of `{0}`. (row, col) = ({1}, {2}).")]
+    InvalidMatrixSize(String, usize, usize),
+}
 
 #[derive(Debug, Clone)]
 pub struct Matrix<T>
@@ -107,9 +115,62 @@ where
     }
 }
 
+impl<T> Add for Matrix<T>
+where
+    T: Copy + Clone + Add + Add<Output = T>,
+{
+    type Output = Result<Self>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        if self.nrows != rhs.rows() || self.ncols != rhs.cols() {
+            return Err(MatrixOpsError::InvalidMatrixSize(
+                "rhs".to_string(),
+                rhs.rows(),
+                rhs.cols(),
+            ))?;
+        }
+        let mut out_vec = Vec::with_capacity(self.nrows * self.ncols);
+        for y in 0..self.nrows {
+            let lcol = &self[y];
+            let rcol = &rhs[y];
+            for x in 0..self.ncols {
+                out_vec.push(lcol[x] + rcol[x]);
+            }
+        }
+        Ok(Matrix::new(self.nrows, self.ncols, out_vec))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_matrix_add() {
+        let rows = 3;
+        let cols = 4;
+        #[rustfmt::skip]
+        let lhs = Matrix::new(rows, cols, vec![
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12
+        ]);
+        let out = lhs.clone() + lhs.clone();
+        assert!(out.is_ok());
+        let out = out.unwrap();
+        assert_eq!(out[0][0], 2);
+        assert_eq!(out[0][1], 4);
+        assert_eq!(out[0][2], 6);
+        assert_eq!(out[0][3], 8);
+        assert_eq!(out[1][0], 10);
+        assert_eq!(out[1][1], 12);
+        assert_eq!(out[1][2], 14);
+        assert_eq!(out[1][3], 16);
+        assert_eq!(out[2][0], 18);
+        assert_eq!(out[2][1], 20);
+        assert_eq!(out[2][2], 22);
+        assert_eq!(out[2][3], 24);
+    }
 
     #[test]
     fn test_matrix() {
