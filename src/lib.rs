@@ -1,10 +1,10 @@
 use std::{
-    ops::{Add, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
     ptr,
 };
 
 use anyhow::Result;
-use num::ToPrimitive;
+use num::{ToPrimitive, Zero};
 use thiserror::Error;
 
 pub mod linalg;
@@ -13,6 +13,9 @@ pub trait MatLinAlgBound:
     Copy
     + Clone
     + ToPrimitive
+    + Zero
+    + Add
+    + AddAssign
     + Mul
     + MulAssign
     + Sub
@@ -21,6 +24,7 @@ pub trait MatLinAlgBound:
     + DivAssign
     + PartialOrd
     + From<f32>
+    + From<<Self as std::ops::Add>::Output>
     + From<<Self as std::ops::Mul>::Output>
     + From<<Self as std::ops::Sub>::Output>
     + From<<Self as std::ops::Div>::Output>
@@ -117,11 +121,11 @@ where
 
 impl<T> Add for Matrix<T>
 where
-    T: Copy + Clone + Add + Add<Output = T>,
+    T: Copy + Clone + AddAssign,
 {
     type Output = Result<Self>;
 
-    fn add(self, rhs: Self) -> Self::Output {
+    fn add(mut self, rhs: Self) -> Self::Output {
         if self.nrows != rhs.rows() || self.ncols != rhs.cols() {
             return Err(MatrixOpsError::InvalidMatrixSize(
                 "rhs".to_string(),
@@ -129,21 +133,83 @@ where
                 rhs.cols(),
             ))?;
         }
-        let mut out_vec = Vec::with_capacity(self.nrows * self.ncols);
+        self += rhs;
+        Ok(self)
+    }
+}
+
+impl<T> AddAssign for Matrix<T>
+where
+    T: Copy + Clone + AddAssign,
+{
+    fn add_assign(&mut self, rhs: Self) {
         for y in 0..self.nrows {
-            let lcol = &self[y];
             let rcol = &rhs[y];
             for x in 0..self.ncols {
-                out_vec.push(lcol[x] + rcol[x]);
+                self[y][x] += rcol[x];
             }
         }
-        Ok(Matrix::new(self.nrows, self.ncols, out_vec))
+    }
+}
+
+impl<T> Mul for Matrix<T>
+where
+    T: Copy + Clone + Mul + From<<T as Mul>::Output> + AddAssign + Zero,
+{
+    type Output = Result<Self>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        if self.ncols != rhs.rows() {
+            return Err(MatrixOpsError::InvalidMatrixSize(
+                "rhs".to_string(),
+                rhs.rows(),
+                rhs.cols(),
+            ))?;
+        }
+        let mut out_vec = vec![T::zero(); self.nrows * rhs.cols()];
+        for y in 0..self.nrows {
+            for x in 0..rhs.cols() {
+                let idx = y * rhs.cols() + x;
+                for k in 0..self.ncols {
+                    out_vec[idx] += (self[y][k] * rhs[k][x]).into();
+                }
+            }
+        }
+        Ok(Matrix::new(self.nrows, rhs.cols(), out_vec))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_matrix_mul() {
+        let rows = 3;
+        let cols = 4;
+        let lhs = Matrix::new(
+            rows,
+            cols,
+            vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 3.0, 4.0],
+        );
+
+        // Case : Assertion Failure
+        let out = lhs.clone() * Matrix::new(1, 1, vec![1.0]);
+        assert!(out.is_err());
+
+        // Case : Normal operation in float
+        let out = (lhs.clone() * Matrix::new(4, 1, vec![1.0, 2.0, 3.0, 4.0])).unwrap();
+        assert!((out[0][0].to_f32().unwrap() - 10.0).abs() < 1e-5);
+        assert!((out[1][0].to_f32().unwrap() - 17.0).abs() < 1e-5);
+        assert!((out[2][0].to_f32().unwrap() - 30.0).abs() < 1e-5);
+
+        // Case : Normal operation in integer
+        let lhs = Matrix::new(rows, cols, vec![1, 1, 1, 1, 1, 1, 2, 2, 1, 2, 3, 4]);
+        let out = (lhs.clone() * Matrix::new(4, 1, vec![1, 2, 3, 4])).unwrap();
+        assert_eq!(out[0][0].to_isize().unwrap(), 10);
+        assert_eq!(out[1][0].to_isize().unwrap(), 17);
+        assert_eq!(out[2][0].to_isize().unwrap(), 30);
+    }
 
     #[test]
     fn test_matrix_add() {
@@ -155,6 +221,10 @@ mod tests {
             5, 6, 7, 8,
             9, 10, 11, 12
         ]);
+        let rhs = Matrix::new(1, 1, vec![1]);
+        let out = lhs.clone() + rhs;
+        assert!(out.is_err());
+
         let out = lhs.clone() + lhs.clone();
         assert!(out.is_ok());
         let out = out.unwrap();
