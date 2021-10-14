@@ -66,6 +66,10 @@ where
         self.ncols
     }
 
+    pub fn get_col(&self, idx: usize) -> Vec<T> {
+        (0..self.nrows).map(|i| self[i][idx].clone()).collect()
+    }
+
     pub fn resize(&mut self, new_rows: usize, new_cols: usize) {
         self.nrows = new_rows;
         self.ncols = new_cols;
@@ -258,6 +262,12 @@ mod tests {
         assert_eq!(mat[0][0], 1);
         assert_eq!(mat[1].len(), cols);
         assert_eq!(mat[2][3], 12);
+
+        let col = mat.get_col(1);
+        assert_eq!(col.len(), 3);
+        assert_eq!(col[0], 2);
+        assert_eq!(col[1], 6);
+        assert_eq!(col[2], 10);
 
         mat.swap_rows(0, 1);
         assert_eq!(mat[0][0], 5);

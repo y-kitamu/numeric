@@ -20,6 +20,10 @@ where
     T: MatLinAlgBound,
 {
     fn new(a: &'a Matrix<T>) -> Result<Self> {
+        if a.rows() != a.cols() {
+            return Err(LinAlgError::InvalidMatrixSize(a.rows(), a.cols()))?;
+        }
+
         let mut lu = a.clone();
         let tiny = 1e-20;
         let n = lu.rows();
@@ -29,14 +33,14 @@ where
         for i in 0..n {
             let mut big = 0.0;
             for j in 0..n {
-                if big < lu[i][j].to_f32().unwrap() {
-                    big = lu[i][j].to_f32().unwrap();
+                if big < lu[i][j].to_f32().unwrap().abs() {
+                    big = lu[i][j].to_f32().unwrap().abs();
                 }
             }
             if big < 1e-7 {
                 return Err(LinAlgError::SingularMatrix("LUdcmp".to_string()))?;
             }
-            vv.push(big);
+            vv.push(1.0 / big);
         }
 
         for k in 0..n {
@@ -80,7 +84,7 @@ where
         })
     }
 
-    fn solve(&self, b: &Vec<T>, x: &mut Vec<T>) -> Result<()> {
+    fn solve(&self, b: &Vec<T>, x: &mut [T]) -> Result<()> {
         if b.len() != self.n {
             return Err(LinAlgError::InvalidVectorSize(b.len()))?;
         }
@@ -89,19 +93,17 @@ where
         }
 
         for i in 0..self.n {
-            x[i] = b[i];
+            x[i] = b[self.indx[i]];
         }
 
         let mut ii = 0;
         for i in 0..self.n {
-            let p = self.indx[i];
-            let mut sum = x[p].to_f32().unwrap();
-            x[p] = x[i];
+            let mut sum = x[i];
             if ii != 0 {
-                for j in 0..(i - 1) {
-                    sum -= self.lu[i][j].to_f32().unwrap() * x[j].to_f32().unwrap();
+                for j in 0..i {
+                    sum -= (self.lu[i][j] * x[j]).into();
                 }
-            } else if sum != 0.0 {
+            } else if sum != T::zero() {
                 ii = i + 1;
             }
             x[i] = sum.into();
@@ -123,9 +125,18 @@ where
         }
 
         for j in 0..b.cols() {
-            self.solve(&b[j].to_vec(), &mut x[j].to_vec());
+            let mut col = x.get_col(j);
+            match self.solve(&b[j].to_vec(), &mut col) {
+                Ok(_) => {
+                    for i in 0..x.rows() {
+                        x[i][j] = col[i];
+                    }
+                }
+                Err(err) => {
+                    return Err(err);
+                }
+            }
         }
-
         Ok(())
     }
 
@@ -150,4 +161,62 @@ where
     }
 
     fn mprove(&self, b: &Vec<T>, x: &Vec<T>) {}
+}
+
+#[cfg(test)]
+mod tests {
+    use num::ToPrimitive;
+
+    use super::*;
+
+    #[test]
+    fn test_ludcmp() {
+        // Case : invalid shape matrix
+        let mat = Matrix::new(1, 2, vec![1.0, 2.0]);
+        let ludcmp = LUdcmp::new(&mat);
+        assert!(ludcmp.is_err());
+
+        // Case : normal matrix
+        let mat = Matrix::new(3, 3, vec![1.0, 1.0, -1.0, -2.0, -1.0, 1.0, -1.0, -2.0, 1.0]);
+        let ludcmp = LUdcmp::new(&mat);
+
+        assert!(ludcmp.is_ok());
+        let ludcmp = ludcmp.unwrap();
+        println!("lu = {:?}", ludcmp.lu);
+
+        // Case : invalid shape vector
+        let res = ludcmp.solve(&vec![1.0; 3], &mut vec![2.0; 2]);
+        assert!(res.is_err());
+
+        // Case : invalid shape matrix
+        let res = ludcmp.solve_mat(
+            &Matrix::new(2, 1, vec![1.0, 1.0]),
+            &mut Matrix::new(3, 3, vec![1.0; 9]),
+        );
+        assert!(res.is_err());
+
+        // Case : inverse matrix
+        let ident = Matrix::new(3, 3, vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
+        let mut inv = Matrix::new(3, 3, vec![0.0; 9]);
+        let res = ludcmp.solve_mat(&ident, &mut inv);
+        assert!(res.is_ok());
+        println!("inv = {:?}", inv);
+        assert!((inv[0][0].to_f32().unwrap() + 1.0).abs() < 1e-5);
+        assert!((inv[0][1].to_f32().unwrap() + 1.0).abs() < 1e-5);
+        assert!((inv[0][2].to_f32().unwrap() + 0.0).abs() < 1e-5);
+        assert!((inv[1][0].to_f32().unwrap() + 1.0).abs() < 1e-5);
+        assert!((inv[1][1].to_f32().unwrap() + 0.0).abs() < 1e-5);
+        assert!((inv[1][2].to_f32().unwrap() + 1.0).abs() < 1e-5);
+        assert!((inv[2][0].to_f32().unwrap() + 3.0).abs() < 1e-5);
+        assert!((inv[2][1].to_f32().unwrap() + 1.0).abs() < 1e-5);
+        assert!((inv[2][2].to_f32().unwrap() + 1.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_ludcmp_singular() {
+        // Singular matrix
+        let mat = Matrix::new(3, 3, vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let ludcmp = LUdcmp::new(&mat);
+        assert!(ludcmp.is_err());
+    }
 }
