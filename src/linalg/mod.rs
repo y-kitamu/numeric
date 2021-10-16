@@ -18,6 +18,7 @@ pub enum LinAlgError {
     ZeroDivision(),
 }
 
+pub mod banddiagonal;
 pub mod gauss_jordan;
 pub mod lu_decomposition;
 pub mod tridiagonal;
