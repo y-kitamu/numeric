@@ -160,7 +160,21 @@ where
         dd
     }
 
-    fn mprove(&self, b: &Vec<T>, x: &Vec<T>) {}
+    fn mprove(&self, b: &Vec<T>, x: &mut Vec<T>) {
+        let mut r = vec![T::zero(); self.n];
+        for i in 0..self.n {
+            let mut sdp: T = (-b[i]).into();
+            for j in 0..self.n {
+                sdp += (self.aref[i][j] * x[j]).into();
+            }
+            r[i] = sdp;
+        }
+        if let Ok(_) = self.solve(&r.clone(), &mut r) {
+            for i in 0..self.n {
+                x[i] -= r[i];
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -210,6 +224,16 @@ mod tests {
         assert!((inv[2][0].to_f32().unwrap() + 3.0).abs() < 1e-5);
         assert!((inv[2][1].to_f32().unwrap() + 1.0).abs() < 1e-5);
         assert!((inv[2][2].to_f32().unwrap() + 1.0).abs() < 1e-5);
+
+        // Case : mimprove
+        let b = vec![1.0, 0.0, 0.0];
+        let mut x = vec![0.0; 3];
+        let res = ludcmp.solve(&b, &mut x);
+        assert!(res.is_ok());
+        ludcmp.mprove(&b, &mut x);
+        assert!((x[0].to_f32().unwrap() + 1.0).abs() < 1e-7);
+        assert!((x[1].to_f32().unwrap() + 1.0).abs() < 1e-7);
+        assert!((x[2].to_f32().unwrap() + 3.0).abs() < 1e-7);
     }
 
     #[test]
