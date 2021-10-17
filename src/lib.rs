@@ -1,5 +1,5 @@
 use std::{
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
     ptr,
 };
 
@@ -23,7 +23,9 @@ pub trait MatLinAlgBound:
     + Div
     + DivAssign
     + PartialOrd
+    + Neg
     + From<f32>
+    + From<<Self as Neg>::Output>
     + From<<Self as std::ops::Add>::Output>
     + From<<Self as std::ops::Mul>::Output>
     + From<<Self as std::ops::Sub>::Output>
