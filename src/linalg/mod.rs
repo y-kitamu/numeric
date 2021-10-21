@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum LinAlgError {
+    #[error("Invalid vector or matrix size")]
+    InvalidSize(),
+
     #[error("Invalid vector size : {0}")]
     InvalidVectorSize(usize),
 
