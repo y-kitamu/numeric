@@ -75,7 +75,7 @@ where
     }
 
     pub fn solve_mat(&self, b: &Matrix<T>, x: &mut Matrix<T>) -> Result<()> {
-        if b.rows() != self.n || x.rows() != self.m || b.cols() != x.cols() {
+        if b.rows() != self.n || x.rows() != self.n || b.cols() != x.cols() {
             return Err(LinAlgError::InvalidSize())?;
         }
         let mut tmp = vec![T::zero(); self.n];
