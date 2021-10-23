@@ -35,6 +35,49 @@ where
     Ok(())
 }
 
+fn cyclic<T>(
+    a: &Vec<T>,
+    b: &Vec<T>,
+    c: &Vec<T>,
+    alpha: T,
+    beta: T,
+    r: &Vec<T>,
+    x: &mut Vec<f32>,
+) -> Result<()>
+where
+    T: MatLinAlgBound,
+{
+    let n = a.len();
+    if n <= 2 {
+        return Err(LinAlgError::InvalidVectorSize(n))?;
+    }
+
+    let mut bb = vec![T::zero(); n];
+    let gamma: T = (-b[0]).into();
+    bb[0] = (b[0] - gamma).into();
+    bb[n - 1] = (b[n - 1] - (T::from(alpha * beta) / gamma).into()).into();
+
+    for i in 1..(n - 1) {
+        bb[i] = b[i];
+    }
+    if let Err(err) = tridiag(a, &bb, c, r, x) {
+        return Err(err);
+    }
+    let mut u = vec![T::zero(); n];
+    u[0] = gamma;
+    u[n - 1] = alpha;
+    let mut z = vec![0.0f32; n];
+    if let Err(err) = tridiag(a, &bb, c, &u, &mut z) {
+        return Err(err);
+    }
+    let fact = (x[0] + beta.to_f32().unwrap() * x[n - 1] / gamma.to_f32().unwrap())
+        / (1.0 + z[0] + beta.to_f32().unwrap() * z[n - 1] / gamma.to_f32().unwrap());
+    for i in 0..n {
+        x[i] -= fact * z[i];
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,5 +109,24 @@ mod tests {
         let b = vec![0.0, 1.0, 1.0, 1.0];
         let res = tridiag(&a, &b, &c, &r, &mut u);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_cyclic() {
+        let a = vec![0.0, 1.0, 1.0, 1.0];
+        let b = vec![2.0, 2.0, 2.0, 2.0];
+        let c = vec![1.0, 1.0, 1.0, 0.0];
+        let r = vec![8.0, 8.0, 12.0, 13.0];
+        let alpha = 2.0;
+        let beta = 1.0;
+        let mut x = vec![0.0f32; 4];
+        let res = cyclic(&a, &b, &c, alpha, beta, &r, &mut x);
+        assert!(res.is_ok());
+
+        println!("x = {:?}", x);
+        assert!((x[0] - 1.0).abs() < 1e-5, "x[0] = {}", x[0]);
+        assert!((x[1] - 2.0).abs() < 1e-5, "x[0] = {}", x[1]);
+        assert!((x[2] - 3.0).abs() < 1e-5, "x[0] = {}", x[2]);
+        assert!((x[3] - 4.0).abs() < 1e-5, "x[0] = {}", x[3]);
     }
 }
