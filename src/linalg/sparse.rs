@@ -108,3 +108,90 @@ where
         at
     }
 }
+
+pub struct ADAT<'a, T>
+where
+    T: MatLinAlgBound,
+{
+    a: &'a NRsparseMat<T>,
+    at: &'a NRsparseMat<T>,
+    adat: NRsparseMat<T>,
+}
+
+impl<'a, T> ADAT<'a, T>
+where
+    T: MatLinAlgBound,
+{
+    pub fn new(a: &'a NRsparseMat<T>, at: &'a NRsparseMat<T>) -> Self {
+        let m = at.ncols;
+        let mut done = vec![usize::max_value(); m];
+        let mut nvals = 0;
+        for j in 0..m {
+            for i in at.col_ptr[j]..at.col_ptr[j + 1] {
+                let k = at.row_ind[i];
+                for l in a.col_ptr[k]..a.col_ptr[k + 1] {
+                    let h = a.row_ind[l];
+                    if done[h] != j {
+                        done[h] = j;
+                        nvals += 1;
+                    }
+                }
+            }
+        }
+        let mut adat = NRsparseMat::new(m, m, nvals);
+        let mut done = vec![usize::max_value(); m];
+        let mut nvals = 0;
+        for j in 0..m {
+            adat.col_ptr[j] = nvals;
+            for i in at.col_ptr[j]..at.col_ptr[j + 1] {
+                let k = at.row_ind[i];
+                for l in a.col_ptr[k]..a.col_ptr[k + 1] {
+                    let h = a.row_ind[l];
+                    if done[h] != j {
+                        adat.row_ind[nvals] = h;
+                        done[h] = j;
+                        nvals += 1;
+                    }
+                }
+            }
+        }
+        adat.col_ptr[m] = nvals;
+        for j in 0..m {
+            let i = adat.col_ptr[j];
+            let size = adat.col_ptr[j + 1] - i;
+            if size > 1 {
+                adat.row_ind[i..(i + size)].sort();
+            }
+        }
+        ADAT { a, at, adat }
+    }
+
+    pub fn updateD(&mut self, D: &Vec<T>) {
+        let m = self.a.nrows;
+        let n = self.a.ncols;
+        let mut temp = vec![T::zero(); n];
+        let mut temp2 = vec![T::zero(); n];
+        for i in 0..m {
+            for j in self.at.col_ptr[i]..self.at.col_ptr[i + 1] {
+                let k = self.at.row_ind[j];
+                temp[k] = (self.at.val[j] * D[k]).into();
+            }
+            for j in self.at.col_ptr[i]..self.at.col_ptr[i + 1] {
+                let k = self.at.row_ind[j];
+                for l in self.a.col_ptr[k]..self.a.col_ptr[k + 1] {
+                    let h = self.a.row_ind[l];
+                    temp2[h] += (temp[k] * self.a.val[l]).into();
+                }
+            }
+            for j in self.adat.col_ptr[i]..self.adat.col_ptr[i + 1] {
+                let k = self.adat.row_ind[j];
+                self.adat.val[j] = temp2[k];
+                temp2[k] = T::zero();
+            }
+        }
+    }
+
+    pub fn reference(&'a self) -> &'a NRsparseMat<T> {
+        &self.adat
+    }
+}
