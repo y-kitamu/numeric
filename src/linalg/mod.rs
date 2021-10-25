@@ -23,6 +23,7 @@ pub enum LinAlgError {
 
 pub mod banddiagonal;
 pub mod gauss_jordan;
+pub mod lingcd;
 pub mod lu_decomposition;
 pub mod sparse;
 pub mod svd;
