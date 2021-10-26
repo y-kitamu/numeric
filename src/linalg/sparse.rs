@@ -37,12 +37,12 @@ pub struct NRsparseMat<T>
 where
     T: MatLinAlgBound,
 {
-    nrows: usize,
-    ncols: usize,
-    nvals: usize,
-    col_ptr: Vec<usize>,
-    row_ind: Vec<usize>,
-    val: Vec<T>,
+    pub nrows: usize,
+    pub ncols: usize,
+    pub nvals: usize,
+    pub col_ptr: Vec<usize>,
+    pub row_ind: Vec<usize>,
+    pub val: Vec<T>,
 }
 
 impl<T> NRsparseMat<T>

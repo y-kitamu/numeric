@@ -1,5 +1,7 @@
 use crate::MatLinAlgBound;
 
+use super::sparse::NRsparseMat;
+
 /// Trait for solving sparce linear equations by the preconditioned conjugate gradient method
 pub trait Linbcg<T>
 where
@@ -139,6 +141,49 @@ where
                 }
                 sx[isamax].to_f32().unwrap().abs().into()
             }
+        }
+    }
+}
+
+pub struct NRsparseLingcb<'a, T>
+where
+    T: MatLinAlgBound,
+{
+    mat: &'a NRsparseMat<T>,
+    n: usize,
+}
+
+impl<'a, T> NRsparseLingcb<'a, T>
+where
+    T: MatLinAlgBound,
+{
+    fn new(mat: &'a NRsparseMat<T>) -> Self {
+        NRsparseLingcb { mat, n: mat.nrows }
+    }
+}
+
+impl<'a, T> Linbcg<T> for NRsparseLingcb<'a, T>
+where
+    T: MatLinAlgBound,
+{
+    fn asolve(&self, b: &Vec<T>, x: &mut Vec<T>, itrnsp: usize) {
+        for i in 0..self.n {
+            let mut diag = 1.0f32;
+            for j in self.mat.col_ptr[i]..self.mat.col_ptr[i + 1] {
+                if self.mat.row_ind[j] == i {
+                    diag = self.mat.val[j].to_f32().unwrap();
+                    break;
+                }
+            }
+            x[i] = (b[i].to_f32().unwrap() / diag).into();
+        }
+    }
+
+    fn atimes(&self, x: &Vec<T>, r: &mut Vec<T>, itrnsp: usize) {
+        if itrnsp > 0 {
+            *r = self.mat.atx(x);
+        } else {
+            *r = self.mat.ax(x);
         }
     }
 }
