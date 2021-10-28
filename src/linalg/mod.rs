@@ -28,3 +28,4 @@ pub mod lu_decomposition;
 pub mod sparse;
 pub mod svd;
 pub mod tridiagonal;
+pub mod vander;
