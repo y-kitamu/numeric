@@ -19,6 +19,12 @@ pub enum LinAlgError {
 
     #[error("Try to divide by zero.")]
     ZeroDivision(),
+
+    #[error("Singular principle minor")]
+    SingularPrincipleMinor(),
+
+    #[error("Should not arrive here")]
+    ShouldNotArriveHere(),
 }
 
 pub mod banddiagonal;
@@ -27,5 +33,6 @@ pub mod lingcd;
 pub mod lu_decomposition;
 pub mod sparse;
 pub mod svd;
+pub mod toeplz;
 pub mod tridiagonal;
 pub mod vander;
