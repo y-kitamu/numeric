@@ -25,9 +25,13 @@ pub enum LinAlgError {
 
     #[error("Should not arrive here")]
     ShouldNotArriveHere(),
+
+    #[error("Negative value not allowed")]
+    NegativeValueNotAllowed(),
 }
 
 pub mod banddiagonal;
+pub mod cholesky;
 pub mod gauss_jordan;
 pub mod lingcd;
 pub mod lu_decomposition;
