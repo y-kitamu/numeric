@@ -68,8 +68,28 @@ where
             g[k] = (pt2 - T::from(pp * qt1)).into();
             h[j] = (qt1 - T::from(qq * qt2)).into();
             h[k] = (qt2 - T::from(qq * qt1)).into();
-            k -= 1;
+            if k > 0 {
+                k -= 1;
+            }
         }
     }
     return Err(LinAlgError::ShouldNotArriveHere())?;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_toeplz() {
+        let r = vec![1.0, 2.0, 3.0, 4.0, 0.0];
+        let mut x = vec![0.0; 3];
+        let y = vec![10.0, 16.0, 17.0f64];
+        let res = toeplz(&r, &mut x, &y);
+        assert!(res.is_ok());
+        println!("{:?}", x);
+        assert!((x[0] - 1.0).abs() < 1e-7);
+        assert!((x[1] - 2.0).abs() < 1e-7);
+        assert!((x[2] - 3.0).abs() < 1e-7);
+    }
 }
