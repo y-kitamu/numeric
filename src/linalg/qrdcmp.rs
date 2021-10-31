@@ -123,6 +123,71 @@ where
         }
         Ok(())
     }
+
+    pub fn update(&mut self, u: &Vec<T>, v: &Vec<T>) {
+        let mut w = u.clone();
+        let k = {
+            let mut m = 0;
+            for k in (0..self.n).rev() {
+                if w[k] != T::zero() {
+                    m = k;
+                }
+            }
+            m
+        };
+        for i in (0..k).rev() {
+            self.rotate(i, w[i], (-w[i + 1]).into());
+            let awi = w[i].to_f32().unwrap().abs();
+            let awwi = w[i + 1].to_f32().unwrap().abs();
+            if awi < 1e-5 {
+                w[i] = awwi.into();
+            } else if awi > awwi {
+                w[i] = (awi * (1.0 + awwi * awwi / (awi * awi)).sqrt()).into();
+            } else {
+                w[i] = (awwi * (1.0 + awi * awi / (awwi * awwi)).sqrt()).into();
+            }
+        }
+        for i in 0..self.n {
+            self.r[0][i] += (w[0] * v[i]).into();
+        }
+        for i in 0..k {
+            self.rotate(i, self.r[i][i], (-self.r[i + 1][i]).into());
+        }
+        for i in 0..self.n {
+            if self.r[i][i].to_f32().unwrap().abs() < 1e-5 {
+                self.singular = true;
+                break;
+            }
+        }
+    }
+
+    pub fn rotate(&mut self, i: usize, a: T, b: T) {
+        let absa = a.to_f32().unwrap().abs();
+        let absb = b.to_f32().unwrap().abs();
+        let (c, s) = if absa < 1e-5 {
+            (0.0, if b >= T::zero() { 1.0 } else { -1.0 })
+        } else if absa > absb {
+            let fact = absb / absa;
+            let tmp = (1.0 / (1.0 + fact * fact).sqrt()).copysign(a.to_f32().unwrap());
+            (tmp, fact * tmp)
+        } else {
+            let fact = absa / absb;
+            let tmp = (1.0 / (1.0 + (fact * fact)).sqrt()).copysign(b.to_f32().unwrap());
+            (fact * tmp, tmp)
+        };
+        for j in i..self.n {
+            let y = self.r[i][j].to_f32().unwrap();
+            let w = self.r[i + 1][j].to_f32().unwrap();
+            self.r[i][j] = (c * y - s * w).into();
+            self.r[i + 1][j] = (s * y + c * w).into();
+        }
+        for j in 0..self.n {
+            let y = self.qt[i][j].to_f32().unwrap();
+            let w = self.qt[i + 1][j].to_f32().unwrap();
+            self.qt[i][j] = (c * y - s * w).into();
+            self.qt[i + 1][j] = (s * y + c * w).into();
+        }
+    }
 }
 
 #[cfg(test)]
