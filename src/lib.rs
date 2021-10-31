@@ -56,7 +56,7 @@ impl<T> Matrix<T>
 where
     T: Clone,
 {
-    fn new(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
+    pub fn new(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
         Matrix { nrows, ncols, data }
     }
 
@@ -101,6 +101,23 @@ where
             for i in 0..self.nrows {
                 ptr::swap(self[i].as_mut_ptr().add(rhs), self[i].as_mut_ptr().add(lhs));
             }
+        }
+    }
+}
+
+impl<T> Matrix<T>
+where
+    T: Clone + Zero + From<f32>,
+{
+    pub fn identity(n: usize) -> Self {
+        let mut data = vec![T::zero(); n * n];
+        for i in 0..n {
+            data[i * n + i] = 1.0.into();
+        }
+        Matrix {
+            nrows: n,
+            ncols: n,
+            data,
         }
     }
 }
@@ -188,6 +205,23 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_matrix_identity() {
+        let n = 3;
+        let mat: Matrix<f64> = Matrix::identity(n);
+        assert_eq!(mat.rows(), n);
+        assert_eq!(mat.cols(), n);
+        assert!((mat[0][0] - 1.0).abs() < 1e-5);
+        assert!((mat[1][1] - 1.0).abs() < 1e-5);
+        assert!((mat[2][2] - 1.0).abs() < 1e-5);
+        assert!(mat[0][1].abs() < 1e-5);
+        assert!(mat[0][2].abs() < 1e-5);
+        assert!(mat[1][0].abs() < 1e-5);
+        assert!(mat[1][2].abs() < 1e-5);
+        assert!(mat[2][0].abs() < 1e-5);
+        assert!(mat[2][1].abs() < 1e-5);
+    }
 
     #[test]
     fn test_matrix_mul() {
