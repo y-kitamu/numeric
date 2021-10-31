@@ -24,8 +24,8 @@ where
     pub fn new(a: Matrix<T>) -> Self {
         let m = a.rows();
         let n = a.cols();
-        let u = a;
-        let v = Matrix::new(n, n, vec![T::zero(); n * n]);
+        let u = Matrix::identity(m);
+        let v = Matrix::identity(n);
         let w = vec![T::zero(); n];
         let eps = f32::EPSILON;
         let tsh = 0.0;
@@ -38,13 +38,68 @@ where
             eps,
             tsh,
         };
-        svd.decompose();
+        svd.decompose(a);
         svd.reorder();
         svd.tsh = 0.5 * (m as f32 + n as f32 + 1.0f32).sqrt() * svd.w[0].to_f32().unwrap() * eps;
         svd
     }
 
-    fn decompose(&mut self) {}
+    /// https://www.cs.utexas.edu/users/inderjit/public_papers/HLA_SVD.PDF
+    fn decompose(&mut self, mut a: Matrix<T>) {
+        // householder reduction
+        for k in 0..self.n {
+            // householder reduction for U
+            let mut sum = T::zero();
+            for i in k..self.m {
+                sum += (a[i][k] * a[i][k]).into();
+            }
+            let s = sum.sqrt();
+            let t: T = (a[k][k] - s.copysign(a[k][k])).into();
+            sum += (T::from(t * t) - T::from(a[k][k] * a[k][k])).into();
+            let norm = sum.sqrt();
+            a[k][k] = s;
+            for j in k..self.m {
+                let mut sum = T::zero();
+                for i in k..self.m {
+                    sum += (self.u[j][i] * a[i][k]).into();
+                }
+                let tau: T = (T::from(sum / norm) * 2.0.into()).into();
+                for i in k..self.m {
+                    self.u[j][i] -= (tau * a[i][k]).into();
+                }
+            }
+            // householder reduction for V
+            if k < self.n - 1 {
+                let mut sum = T::zero();
+                for i in (k + 1)..self.n {
+                    sum += (a[k][i] * a[k][i]).into();
+                }
+                let s = sum.sqrt();
+                let t: T = (a[k][k + 1] - s.copysign(a[k][k + 1])).into();
+                sum += (T::from(t * t) - T::from(a[k][k + 1] * a[k][k + 1])).into();
+                let norm = sum.sqrt();
+                a[k][k + 1] = s;
+                for j in (k + 1)..self.n {
+                    let mut sum = T::zero();
+                    for i in (k + 1)..self.n {
+                        sum += (self.v[i][j] * a[k][i]).into();
+                    }
+                    let tau: T = (T::from(sum / norm) * 2.0.into()).into();
+                    for i in (k + 1)..self.n {
+                        self.v[i][j] -= (tau * a[k][i]).into();
+                    }
+                }
+            }
+        }
+        for i in 0..self.m {
+            for j in 0..self.n {
+                if i == j || (i + 1) == j {
+                    continue;
+                }
+                a[i][j] = T::zero();
+            }
+        }
+    }
 
     fn reorder(&mut self) {}
 

@@ -26,11 +26,39 @@ pub trait MatLinAlgBound:
     + Neg
     + From<f32>
     + From<<Self as Neg>::Output>
-    + From<<Self as std::ops::Add>::Output>
-    + From<<Self as std::ops::Mul>::Output>
-    + From<<Self as std::ops::Sub>::Output>
-    + From<<Self as std::ops::Div>::Output>
+    + From<<Self as Add>::Output>
+    + From<<Self as Mul>::Output>
+    + From<<Self as Sub>::Output>
+    + From<<Self as Div>::Output>
 {
+    fn abs(self) -> Self {
+        let val = self.clone();
+        if val < Self::zero() {
+            return (-val).into();
+        }
+        self.clone()
+    }
+
+    fn sqrt(self) -> Self {
+        let val = self.clone().to_f32().unwrap();
+        val.sqrt().into()
+    }
+
+    fn copysign(self, sign: Self) -> Self {
+        if sign < Self::zero() {
+            if self < Self::zero() {
+                self
+            } else {
+                (-self).into()
+            }
+        } else {
+            if self < Self::zero() {
+                (-self).into()
+            } else {
+                self
+            }
+        }
+    }
 }
 
 impl MatLinAlgBound for f32 {}
@@ -119,6 +147,14 @@ where
             ncols: n,
             data,
         }
+    }
+
+    pub fn pseudo_identity(nrows: usize, ncols: usize) -> Self {
+        let mut data = vec![T::zero(); nrows * ncols];
+        for i in 0..(nrows.min(ncols)) {
+            data[i * ncols + i] = 1.0.into();
+        }
+        Matrix { nrows, ncols, data }
     }
 }
 
