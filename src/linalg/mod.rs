@@ -35,6 +35,7 @@ pub mod cholesky;
 pub mod gauss_jordan;
 pub mod lingcd;
 pub mod lu_decomposition;
+pub mod qrdcmp;
 pub mod sparse;
 pub mod svd;
 pub mod toeplz;
