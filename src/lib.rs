@@ -7,6 +7,7 @@ use anyhow::Result;
 use num::{ToPrimitive, Zero};
 use thiserror::Error;
 
+pub mod interp;
 pub mod linalg;
 
 pub trait MatLinAlgBound:
