@@ -9,6 +9,7 @@ use thiserror::Error;
 
 pub mod interp;
 pub mod linalg;
+mod macros;
 
 pub trait MatLinAlgBound:
     Copy
