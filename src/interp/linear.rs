@@ -1,4 +1,5 @@
 use crate::accessor_impl;
+use anyhow::Result;
 
 use super::Interp;
 
@@ -37,13 +38,14 @@ impl<'a> Interp for LinearInterp<'a> {
         self.xx
     }
 
-    fn rawinterp(&self, j: usize, x: f64) -> f64 {
+    fn rawinterp(&self, j: usize, x: f64) -> Result<f64> {
         println!("j = {}, x = {}", j, x);
         if self.xx[j] == self.xx[j + 1] {
-            return self.yy[j];
+            return Ok(self.yy[j]);
         }
-        self.yy[j]
-            + ((x - self.xx[j]) / (self.xx[j + 1] - self.xx[j])) * (self.yy[j + 1] - self.yy[j])
+        let y = self.yy[j]
+            + ((x - self.xx[j]) / (self.xx[j + 1] - self.xx[j])) * (self.yy[j + 1] - self.yy[j]);
+        Ok(y)
     }
 }
 
@@ -56,14 +58,14 @@ mod tests {
         let xx = vec![1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 20.0];
         let yy = vec![10.0, 15.0, 30.0, 10.0, 0.0, 5.0, -5.0];
         let mut lint = LinearInterp::new(&xx, &yy);
-        let res = lint.interp(1.0);
+        let res = lint.interp(1.0).unwrap();
         assert!((res - 10.0).abs() < 1e-5);
-        assert!((lint.interp(1.5) - 12.5).abs() < 1e-5);
-        let res = lint.interp(20.0);
+        assert!((lint.interp(1.5).unwrap() - 12.5).abs() < 1e-5);
+        let res = lint.interp(20.0).unwrap();
         assert!((res + 5.0).abs() < 1e-5, "res = {}", res);
-        let res = lint.interp(15.0);
+        let res = lint.interp(15.0).unwrap();
         assert!((res - 0.0).abs() < 1e-5, "res = {}", res);
-        let res = lint.interp(6.0);
+        let res = lint.interp(6.0).unwrap();
         assert!((res - 1.0).abs() < 1e-5, "res = {}", res);
     }
 }

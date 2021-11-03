@@ -1,6 +1,15 @@
 use crate::accessor;
+use anyhow::Result;
+use thiserror::Error;
 
 pub mod linear;
+mod poly_1d;
+
+#[derive(Error, Debug)]
+pub enum InterpError {
+    #[error("IdenticalX")]
+    IdenticalX(),
+}
 
 trait Interp {
     accessor!((get = n, set = set_n): usize);
@@ -10,7 +19,7 @@ trait Interp {
     accessor!((get = cor, set = set_cor): usize);
     fn xx(&self) -> &Vec<f64>;
 
-    fn interp(&mut self, x: f64) -> f64 {
+    fn interp(&mut self, x: f64) -> Result<f64> {
         let jlo = if self.cor() > 0 {
             self.hunt(x)
         } else {
@@ -106,5 +115,5 @@ trait Interp {
         }
     }
 
-    fn rawinterp(&self, jlo: usize, x: f64) -> f64;
+    fn rawinterp(&self, jlo: usize, x: f64) -> Result<f64>;
 }
