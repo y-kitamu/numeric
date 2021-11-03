@@ -46,6 +46,10 @@ pub trait MatLinAlgBound:
         val.sqrt().into()
     }
 
+    fn square(self) -> Self {
+        (self * self).into()
+    }
+
     fn copysign(self, sign: Self) -> Self {
         if sign < Self::zero() {
             if self < Self::zero() {
@@ -60,6 +64,10 @@ pub trait MatLinAlgBound:
                 self
             }
         }
+    }
+
+    fn norm(self, rhs: Self) -> Self {
+        Self::from(Self::from(self * self) + Self::from(rhs * rhs)).sqrt()
     }
 }
 

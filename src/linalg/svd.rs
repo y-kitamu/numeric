@@ -100,6 +100,104 @@ where
             }
         }
         // Golub-Reinsch SVD
+        let eps: T = 1e-7.into();
+        let mut p = self.n - 1;
+        let mut q = 0;
+        loop {
+            for i in 0..(self.n - 1) {
+                if a[i][i + 1].abs() < (T::from(a[i][i].abs() + a[i + 1][i + 1]).abs() * eps).into()
+                {
+                    a[i][i + 1] = T::zero();
+                }
+            }
+            for i in (1..self.n).rev() {
+                if a[i - 1][i].abs() > eps {
+                    q = self.n - 1 - i;
+                    break;
+                }
+            }
+            if q == self.n - 1 {
+                break;
+            }
+            for i in 0..(self.n - q) {
+                if a[i][i + 1].abs() < eps {
+                    p = i + 1;
+                }
+            }
+            let mut flag = false;
+            for i in p..(self.n - q) {
+                if a[i][i].abs() < eps {
+                    // Givens rotation
+                    let norm = (a[i][i + 1].square() + a[i + 1][i + 1].square()).into();
+                    let nsin: T = (a[i][i + 1] / norm).into();
+                    let cos: T = (a[i + 1][i + 1] / norm).into();
+                    a[i + 1][i + 1] =
+                        (T::from(nsin * a[i][i + 1]) + T::from(cos * a[i + 1][i + 1])).into();
+                    a[i][i + 1] = T::zero();
+                    flag = true;
+                }
+            }
+            if flag {
+                continue;
+            }
+            // Golub–Kahan SVD step
+            // Set C = lower, right 2 × 2 sub matrix of B(2, 2)T x B(2, 2)
+            let idx = self.n - q - 2;
+            let c00 = a[idx][idx].square();
+            let c10: T = (a[idx][idx] * a[idx][idx + 1]).into();
+            let c11: T = (a[idx][idx + 1].square() + a[idx + 1][idx + 1].square()).into();
+            let nume0 = T::from(c10 * 2.0.into()).square();
+            let nume1: T = (T::from(c00 * c11) - c10.square()).into();
+            let nume: T = (nume0 - T::from(nume1 * 4.0.into())).into();
+            let l1: T = (((c00 + c11) + nume) * 0.5.into()).into();
+            let l2: T = (T::from((c00 + c11) - nume) * 0.5.into()).into();
+            let mu = if T::from(l1 - a[idx + 1][idx + 1]).abs()
+                < T::from(l2 - a[idx + 1][idx + 1]).abs()
+            {
+                l1
+            } else {
+                l2
+            };
+            let givens_right = |cos: T, sin: T, mat: &mut Matrix<T>, idx: usize| {
+                let ak0k0: T =
+                    (T::from(cos * mat[idx][idx]) - T::from(sin * mat[idx][idx + 1])).into();
+                let ak0k1: T =
+                    (T::from(sin * mat[idx][idx]) + T::from(cos * mat[idx][idx + 1])).into();
+                let ak1k0: T = (T::from(cos * mat[idx + 1][idx])
+                    - T::from(sin * mat[idx + 1][idx + 1]))
+                .into();
+                let ak1k1: T = (T::from(sin * mat[idx][idx + 1])
+                    - T::from(cos * mat[idx + 1][idx + 1]))
+                .into();
+                mat[idx][idx] = ak0k0;
+                mat[idx][idx + 1] = ak0k1;
+                mat[idx + 1][idx] = ak1k0;
+                mat[idx + 1][idx + 1] = ak1k1;
+            };
+            let mut alpha: T = (a[p][p].square() - mu).into();
+            let mut beta: T = (a[p][p] * a[p][p + 1]).into();
+            for k in p..(self.n - q - 1) {
+                let norm = alpha.norm(beta);
+                let cos: T = (alpha / norm).into();
+                let sin: T = (T::from(-beta) / norm).into();
+                givens_right(cos, sin, &mut a, k);
+                givens_right(cos, sin, &mut self.v, k);
+                alpha = a[k][k];
+                beta = a[k + 1][k];
+                let norm = alpha.norm(beta);
+                let cos: T = (alpha / norm).into();
+                let sin: T = (T::from(-beta) / norm).into();
+                givens_right(cos, sin, &mut a, k);
+                givens_right(cos, sin, &mut self.u, k);
+                if k < self.n - q - 2 {
+                    alpha = a[k][k + 1];
+                    beta = a[k][k + 2];
+                }
+            }
+        }
+        for i in 0..self.n {
+            self.w[i] = a[i][i];
+        }
     }
 
     fn reorder(&mut self) {}
