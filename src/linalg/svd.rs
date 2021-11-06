@@ -292,3 +292,21 @@ where
         null_mat
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // #[test]
+    fn test_svd() {
+        let a = Matrix::new(2, 2, vec![4.0, 0.0, 3.0, -5.0]);
+        let svd = SVD::new(a);
+        let b = vec![4.0, -7.0];
+        let mut x = vec![0.0, 0.0];
+        let res = svd.solve(&b, &mut x);
+        assert!(res.is_ok());
+        println!("x = {:?}", x);
+        assert!((x[0] - 1.0).abs() < 1e-5);
+        assert!((x[1] - 2.0).abs() < 1e-5);
+    }
+}

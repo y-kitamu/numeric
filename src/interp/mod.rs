@@ -4,6 +4,7 @@ use thiserror::Error;
 
 pub mod linear;
 pub mod poly_1d;
+pub mod rational_1d;
 pub mod spline1d;
 
 #[derive(Error, Debug)]

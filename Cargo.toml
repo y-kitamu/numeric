@@ -9,7 +9,12 @@ edition = "2018"
 num = "0.4.0"
 anyhow = "1.0.44"
 thiserror = "1.0.29"
+csv = "1.1.6"
 
 [[example]]
 name = "spline1d"
 path = "examples/spline1d.rs"
+
+[[example]]
+name = "interp"
+path = "examples/interp.rs"
