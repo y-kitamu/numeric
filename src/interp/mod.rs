@@ -3,15 +3,19 @@ use anyhow::Result;
 use thiserror::Error;
 
 pub mod linear;
-mod poly_1d;
+pub mod poly_1d;
+pub mod spline1d;
 
 #[derive(Error, Debug)]
 pub enum InterpError {
     #[error("IdenticalX")]
     IdenticalX(),
+
+    #[error("ZeroDiagonal")]
+    ZeroDiagonal(),
 }
 
-trait Interp {
+pub trait Interp {
     accessor!((get = n, set = set_n): usize);
     accessor!((get = mm, set = set_mm): usize);
     accessor!((get = jsav, set = set_jsav): usize);
