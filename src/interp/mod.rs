@@ -2,6 +2,7 @@ use crate::accessor;
 use anyhow::Result;
 use thiserror::Error;
 
+pub mod barycentric_1d;
 pub mod linear;
 pub mod poly_1d;
 pub mod rational_1d;
