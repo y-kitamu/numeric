@@ -5,6 +5,7 @@ use thiserror::Error;
 pub mod barycentric_1d;
 pub mod linear;
 pub mod poly_1d;
+pub mod poly_coeff;
 pub mod rational_1d;
 pub mod spline1d;
 
