@@ -3,7 +3,7 @@ use anyhow::Result;
 
 use super::Interp;
 
-struct Poly1D<'a> {
+pub struct Poly1D<'a> {
     n: usize,
     mm: usize,
     jsav: usize,
