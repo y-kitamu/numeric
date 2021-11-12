@@ -27,6 +27,10 @@ impl<'a> Poly1D<'a> {
             yy,
         }
     }
+
+    pub fn set_yy(&mut self, yy: &'a [f64]) {
+        self.yy = yy;
+    }
 }
 
 impl<'a> Interp for Poly1D<'a> {
