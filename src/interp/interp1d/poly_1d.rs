@@ -11,7 +11,7 @@ pub struct Poly1D<'a> {
     cor: usize,
     dy: f64,
     xx: &'a Vec<f64>,
-    yy: &'a Vec<f64>,
+    yy: &'a [f64],
 }
 
 impl<'a> Poly1D<'a> {

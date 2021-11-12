@@ -10,7 +10,7 @@ pub struct Poly2D<'a> {
     nn: usize,
     y: &'a Matrix<f64>,
     yv: Vec<f64>,
-    x1interp: Poly1D<'a>,
+    x1v: &'a Vec<f64>,
     x2interp: Poly1D<'a>,
 }
 
@@ -23,7 +23,6 @@ impl<'a> Poly2D<'a> {
         np: usize,
     ) -> Self {
         let yv = vec![0.0; x1v.len()];
-        let x1interp = Poly1D::new(x1v, x1v, mp);
         let x2interp = Poly1D::new(x2v, x2v, np);
         Self {
             m: x1v.len(),
@@ -32,29 +31,29 @@ impl<'a> Poly2D<'a> {
             nn: np,
             y: ym,
             yv,
-            x1interp,
+            x1v,
             x2interp,
         }
     }
 
     pub fn interp(&mut self, x1p: f64, x2p: f64) -> f64 {
-        let i = if self.x1interp.cor() == 1 {
-            self.x1interp.hunt(x1p)
+        let mut x1interp = Poly1D::new(self.x1v, self.x1v, self.mm);
+        let i = if x1interp.cor() == 1 {
+            x1interp.hunt(x1p)
         } else {
-            self.x1interp.locate(x1p)
+            x1interp.locate(x1p)
         };
         let j = if self.x2interp.cor() == 1 {
             self.x2interp.hunt(x2p)
         } else {
             self.x2interp.locate(x2p)
         };
-        let mut yv = vec![0.0; self.m];
         for i in 0..self.m {
             self.x2interp.set_yy(&self.y[i]);
-            yv[i] = self.x2interp.rawinterp(j, x2p).unwrap();
+            self.yv[i] = self.x2interp.rawinterp(j, x2p).unwrap();
         }
-        self.x1interp.set_yy(&yv);
-        self.x1interp.rawinterp(i, x1p).unwrap()
+        x1interp.set_yy(&self.yv);
+        x1interp.rawinterp(i, x1p).unwrap()
     }
 }
 
