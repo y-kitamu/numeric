@@ -10,11 +10,12 @@ num = "0.4.0"
 anyhow = "1.0.44"
 thiserror = "1.0.29"
 csv = "1.1.6"
+clap = "3.0.0-beta.5"
 
 [[example]]
-name = "spline1d"
-path = "examples/spline1d.rs"
+name = "interp2d"
+path = "examples/interp2d.rs"
 
 [[example]]
-name = "interp"
-path = "examples/interp.rs"
+name = "interp1d"
+path = "examples/interp1d.rs"

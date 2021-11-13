@@ -2,7 +2,7 @@
 use std::{env, io, path::PathBuf};
 
 use numerics::interp::{
-    barycentric_1d::BaryRat1D, poly_1d::Poly1D, rational_1d::Rational1D, Interp,
+    barycentric_1d::BaryRat1D, poly_1d::Poly1D, rational_1d::Rational1D, spline1d::Spline1D, Interp,
 };
 
 fn interp_poly(mm: usize) -> Vec<(f64, f64)> {
@@ -77,6 +77,30 @@ fn interp_barycentric(mm: usize, calc: usize) -> Vec<(f64, f64)> {
     xy
 }
 
+fn interp_spline() -> Vec<(f64, f64)> {
+    let func = |x: f64| (x * x + 2.0 * x + 1.0) / (x + 2.0);
+    let xx = vec![1.0, 2.0, 3.0, 6.0, 8.0, 9.0, 10.0, 11.0, 12.0];
+    let yy = vec![
+        func(1.0),
+        func(2.0),
+        func(3.0),
+        func(6.0),
+        func(8.0),
+        func(9.0),
+        func(10.0),
+        func(11.0),
+        func(12.0),
+    ];
+    let mut inter = Spline1D::new(&xx, &yy).unwrap();
+    let xy: Vec<(f64, f64)> = (0..120)
+        .map(|i| {
+            let x = i as f64 / 10.0;
+            (x, inter.interp(x).unwrap())
+        })
+        .collect();
+    xy
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     println!("args = {:?}", args);
@@ -109,6 +133,11 @@ fn main() {
                 .unwrap();
             let xy = interp_poly(mm);
             let filename = format!("poly1d{}.csv", mm);
+            (xy, filename)
+        }
+        "spline" => {
+            let xy = interp_spline();
+            let filename = format!("spline1d.csv");
             (xy, filename)
         }
         _ => {

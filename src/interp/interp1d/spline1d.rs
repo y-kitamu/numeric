@@ -10,12 +10,12 @@ pub struct Spline1D<'a> {
     dj: usize,
     cor: usize,
     xx: &'a Vec<f64>,
-    yy: &'a Vec<f64>,
+    yy: &'a [f64],
     y2: Vec<f64>,
 }
 
 impl<'a> Spline1D<'a> {
-    pub fn new(xx: &'a Vec<f64>, yy: &'a Vec<f64>) -> Result<Self> {
+    pub fn new(xx: &'a Vec<f64>, yy: &'a [f64]) -> Result<Self> {
         let mut obj = Self {
             n: xx.len(),
             mm: 2,
