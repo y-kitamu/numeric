@@ -1,6 +1,5 @@
 use crate::accessor;
 use anyhow::Result;
-use thiserror::Error;
 
 pub mod barycentric_1d;
 pub mod linear;
@@ -8,15 +7,6 @@ pub mod poly_1d;
 pub mod poly_coeff;
 pub mod rational_1d;
 pub mod spline1d;
-
-#[derive(Error, Debug)]
-pub enum InterpError {
-    #[error("IdenticalX")]
-    IdenticalX(),
-
-    #[error("ZeroDiagonal")]
-    ZeroDiagonal(),
-}
 
 pub trait Interp {
     accessor!((get = n, set = set_n): usize);
