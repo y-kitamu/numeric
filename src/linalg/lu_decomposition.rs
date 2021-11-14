@@ -19,7 +19,7 @@ impl<'a, T> LUdcmp<'a, T>
 where
     T: MatLinAlgBound,
 {
-    fn new(a: &'a Matrix<T>) -> Result<Self> {
+    pub fn new(a: &'a Matrix<T>) -> Result<Self> {
         if a.rows() != a.cols() {
             return Err(LinAlgError::InvalidMatrixSize(a.rows(), a.cols()))?;
         }
@@ -84,7 +84,7 @@ where
         })
     }
 
-    fn solve(&self, b: &Vec<T>, x: &mut [T]) -> Result<()> {
+    pub fn solve(&self, b: &Vec<T>, x: &mut [T]) -> Result<()> {
         if b.len() != self.n {
             return Err(LinAlgError::InvalidVectorSize(b.len()))?;
         }
@@ -119,7 +119,7 @@ where
         Ok(())
     }
 
-    fn solve_mat(&self, b: &Matrix<T>, x: &mut Matrix<T>) -> Result<()> {
+    pub fn solve_mat(&self, b: &Matrix<T>, x: &mut Matrix<T>) -> Result<()> {
         if b.rows() != self.n || x.rows() != self.n || b.cols() != x.cols() {
             return Err(LinAlgError::InvalidMatrixSize(b.rows(), b.cols()))?;
         }
@@ -140,7 +140,7 @@ where
         Ok(())
     }
 
-    fn inverse(&self, ainv: &mut Matrix<T>) -> Result<()> {
+    pub fn inverse(&self, ainv: &mut Matrix<T>) -> Result<()> {
         let mut b = Matrix::<T>::new(self.n, self.n, vec![0.0.into(); self.n * self.n]);
         ainv.assign(self.n, self.n, 0.0.into());
 
@@ -152,7 +152,7 @@ where
         self.solve_mat(&b, ainv)
     }
 
-    fn det(&self) -> f32 {
+    pub fn det(&self) -> f32 {
         let mut dd = self.d;
         for i in 0..self.n {
             dd += self.lu[i][i].to_f32().unwrap();
@@ -160,7 +160,7 @@ where
         dd
     }
 
-    fn mprove(&self, b: &Vec<T>, x: &mut Vec<T>) {
+    pub fn mprove(&self, b: &Vec<T>, x: &mut Vec<T>) {
         let mut r = vec![T::zero(); self.n];
         for i in 0..self.n {
             let mut sdp: T = (-b[i]).into();
