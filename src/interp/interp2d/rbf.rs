@@ -93,5 +93,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_rbf() {}
+    fn test_rbf() {
+        let rbf_fn = MultiQuadric::new(1.0);
+        let pts = Matrix::new(5, 2, vec![1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 1.0, 0.0, 0.0]);
+        let vals = vec![1.0, 5.0, 8.0, 5.0, 0.0];
+
+        let rbf = RBF::new(&pts, &vals, rbf_fn, false);
+        let pt = vec![1.0, 1.0];
+        let res = rbf.interp(&pt);
+        assert!((res - 1.0).abs() < 1e-5);
+
+        let rbf_fn = MultiQuadric::new(1.0);
+        let rbf = RBF::new(&pts, &vals, rbf_fn, true);
+        let res = rbf.interp(&pt);
+    }
 }
