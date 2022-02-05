@@ -1,4 +1,4 @@
-use crate::{accessor_impl, interp::InterpError};
+use crate::accessor_impl;
 
 use super::Interp;
 use anyhow::Result;

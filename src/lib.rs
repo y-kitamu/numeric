@@ -141,6 +141,20 @@ where
             }
         }
     }
+
+    pub fn transpose(&self) -> Self {
+        let mut dst = self.data.clone();
+        for y in 0..self.rows() {
+            for x in 0..self.cols() {
+                dst[x * self.rows() + y] = self[y][x].clone();
+            }
+        }
+        Self {
+            nrows: self.ncols,
+            ncols: self.nrows,
+            data: dst,
+        }
+    }
 }
 
 impl<T> Matrix<T>

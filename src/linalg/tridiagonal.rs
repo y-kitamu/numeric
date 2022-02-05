@@ -5,7 +5,7 @@ use crate::MatLinAlgBound;
 use super::LinAlgError;
 
 /// Solves for a vector u[0..n-1] the tridiagonal linear set given by the equation:
-fn tridiag<T>(a: &Vec<T>, b: &Vec<T>, c: &Vec<T>, r: &Vec<T>, u: &mut Vec<f32>) -> Result<()>
+pub fn tridiag<T>(a: &Vec<T>, b: &Vec<T>, c: &Vec<T>, r: &Vec<T>, u: &mut Vec<f32>) -> Result<()>
 where
     T: MatLinAlgBound,
 {
@@ -35,7 +35,7 @@ where
     Ok(())
 }
 
-fn cyclic<T>(
+pub fn cyclic<T>(
     a: &Vec<T>,
     b: &Vec<T>,
     c: &Vec<T>,

@@ -4,7 +4,7 @@ use crate::MatLinAlgBound;
 
 use super::LinAlgError;
 
-fn toeplz<T>(r: &Vec<T>, x: &mut Vec<T>, y: &Vec<T>) -> Result<()>
+pub fn toeplz<T>(r: &Vec<T>, x: &mut Vec<T>, y: &Vec<T>) -> Result<()>
 where
     T: MatLinAlgBound,
 {

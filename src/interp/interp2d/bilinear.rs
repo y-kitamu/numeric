@@ -4,25 +4,25 @@ use crate::{
 };
 
 pub struct Bilinear<'a> {
-    m: usize,
-    n: usize,
+    _m: usize,
+    _n: usize,
     y: &'a Matrix<f64>,
     x1interp: LinearInterp<'a>,
     x2interp: LinearInterp<'a>,
 }
 
 impl<'a> Bilinear<'a> {
-    fn new(x1v: &'a Vec<f64>, x2v: &'a Vec<f64>, y: &'a Matrix<f64>) -> Self {
+    pub fn new(x1v: &'a Vec<f64>, x2v: &'a Vec<f64>, y: &'a Matrix<f64>) -> Self {
         Bilinear {
-            m: x1v.len(),
-            n: x2v.len(),
-            y,
+            _m: x1v.len(),
+            _n: x2v.len(),
+            y: y,
             x1interp: LinearInterp::new(x1v, x1v),
             x2interp: LinearInterp::new(x2v, x2v),
         }
     }
 
-    fn interp(&mut self, x1p: f64, x2p: f64) -> f64 {
+    pub fn interp(&mut self, x1p: f64, x2p: f64) -> f64 {
         let i = if self.x1interp.cor() == 1 {
             self.x1interp.hunt(x1p)
         } else {
@@ -36,11 +36,11 @@ impl<'a> Bilinear<'a> {
         let t = (x1p - self.x1interp.xx()[i]) / (self.x1interp.xx()[i + 1] - self.x1interp.xx()[i]);
         let u = (x2p - self.x2interp.xx()[j]) / (self.x2interp.xx()[j + 1] - self.x2interp.xx()[j]);
         // println!("i = {}, j = {}, t = {}, u = {}", i, j, t, u);
-        let yy = (1.0 - t) * (1.0 - u) * self.y[i][j]
+
+        (1.0 - t) * (1.0 - u) * self.y[i][j]
             + t * (1.0 - u) * self.y[i + 1][j]
             + (1.0 - t) * u * self.y[i][j + 1]
-            + t * u * self.y[i + 1][j + 1];
-        yy
+            + t * u * self.y[i + 1][j + 1]
     }
 }
 

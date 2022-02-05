@@ -20,7 +20,7 @@ impl RBFFunc for MultiQuadric {
     }
 }
 
-struct RBF<'a, T>
+pub struct RBF<'a, T>
 where
     T: RBFFunc,
 {
@@ -28,7 +28,7 @@ where
     n: usize,
     w: Vec<f64>,
     pts: &'a Matrix<f64>,
-    vals: &'a Vec<f64>,
+    _vals: &'a Vec<f64>,
     rbf_fn: T,
     norm: bool,
 }
@@ -63,7 +63,7 @@ where
             n,
             w,
             pts,
-            vals,
+            _vals: vals,
             norm,
             rbf_fn,
         }
@@ -105,6 +105,6 @@ mod tests {
 
         let rbf_fn = MultiQuadric::new(1.0);
         let rbf = RBF::new(&pts, &vals, rbf_fn, true);
-        let res = rbf.interp(&pt);
+        let _res = rbf.interp(&pt);
     }
 }

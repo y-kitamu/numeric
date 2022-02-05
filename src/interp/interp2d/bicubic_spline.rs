@@ -4,9 +4,9 @@ use crate::{
 };
 
 pub struct Spline2D<'a> {
-    m: usize,
-    n: usize,
-    y: &'a Matrix<f64>,
+    _m: usize,
+    _n: usize,
+    _y: &'a Matrix<f64>,
     x1: &'a Vec<f64>,
     srp: Vec<Spline1D<'a>>,
 }
@@ -18,9 +18,9 @@ impl<'a> Spline2D<'a> {
             .map(|i| Spline1D::new(x2v, &ym[i]).unwrap())
             .collect();
         Self {
-            m,
-            n: x2v.len(),
-            y: ym,
+            _m: m,
+            _n: x2v.len(),
+            _y: ym,
             x1: x1v,
             srp,
         }

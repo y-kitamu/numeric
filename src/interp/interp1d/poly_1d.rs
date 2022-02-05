@@ -9,7 +9,7 @@ pub struct Poly1D<'a> {
     jsav: usize,
     dj: usize,
     cor: usize,
-    dy: f64,
+    _dy: f64,
     xx: &'a Vec<f64>,
     yy: &'a [f64],
 }
@@ -22,7 +22,7 @@ impl<'a> Poly1D<'a> {
             jsav: 0,
             dj: 0,
             cor: 0,
-            dy: 0.0,
+            _dy: 0.0,
             xx,
             yy,
         }

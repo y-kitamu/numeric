@@ -55,7 +55,7 @@ pub trait Interp {
     fn hunt(&mut self, x: f64) -> usize {
         let mut jl = self.jsav();
         let mut inc = 1;
-        let mut ju = jl;
+        let mut ju;
         let n = self.n();
         if n < 2 || self.mm() < 2 || self.mm() > n {
             return self.locate(x);
@@ -78,11 +78,12 @@ pub trait Interp {
         } else {
             ju = jl;
             loop {
-                jl = jl - inc;
-                if jl <= 0 {
+                if jl < inc {
                     jl = 0;
                     break;
-                } else if (x >= xx[jl]) == ascend {
+                }
+                jl -= inc;
+                if (x >= xx[jl]) == ascend {
                     break;
                 } else {
                     ju = jl;

@@ -17,8 +17,8 @@ impl<'a> BaryRat1D<'a> {
     pub fn new(xx: &'a Vec<f64>, yy: &'a Vec<f64>, mm: usize, calc: usize) -> Self {
         let n = xx.len();
         let w = match calc {
-            1 => BaryRat1D::calcW(xx, mm),
-            _ => BaryRat1D::calcW2(xx, mm),
+            1 => BaryRat1D::calc_w(xx, mm),
+            _ => BaryRat1D::calc_w2(xx, mm),
         };
         Self {
             n,
@@ -32,7 +32,7 @@ impl<'a> BaryRat1D<'a> {
         }
     }
 
-    fn calcW(xx: &Vec<f64>, mm: usize) -> Vec<f64> {
+    fn calc_w(xx: &Vec<f64>, mm: usize) -> Vec<f64> {
         let n = xx.len();
         let mut w = vec![0.0; n];
         for k in 0..n {
@@ -57,7 +57,7 @@ impl<'a> BaryRat1D<'a> {
         w
     }
 
-    fn calcW2(xx: &Vec<f64>, mm: usize) -> Vec<f64> {
+    fn calc_w2(xx: &Vec<f64>, _mm: usize) -> Vec<f64> {
         let n = xx.len();
         let mut w = vec![0.0; n];
         for i in 0..n {
@@ -84,7 +84,7 @@ impl<'a> Interp for BaryRat1D<'a> {
         self.xx
     }
 
-    fn rawinterp(&self, jlo: usize, x: f64) -> anyhow::Result<f64> {
+    fn rawinterp(&self, _jlo: usize, x: f64) -> anyhow::Result<f64> {
         let mut nume = 0.0;
         let mut deno = 0.0;
         for i in 0..self.n {
@@ -105,8 +105,8 @@ mod tests {
 
     #[test]
     fn test_linear_interp() {
-        let mut xx = vec![1.0, 2.0, 3.0, 5.0, 7.0, 10.0];
-        let mut yy = vec![1.0, 4.0, 9.0, 25.0, 49.0, 100.0];
+        let xx = vec![1.0, 2.0, 3.0, 5.0, 7.0, 10.0];
+        let yy = vec![1.0, 4.0, 9.0, 25.0, 49.0, 100.0];
         let mut by1d = BaryRat1D::new(&xx, &yy, 2, 1);
         let res = by1d.interp(1.5);
         assert!(res.is_ok());

@@ -166,7 +166,7 @@ where
         ADAT { a, at, adat }
     }
 
-    pub fn updateD(&mut self, D: &Vec<T>) {
+    pub fn update_d(&mut self, d: &Vec<T>) {
         let m = self.a.nrows;
         let n = self.a.ncols;
         let mut temp = vec![T::zero(); n];
@@ -174,7 +174,7 @@ where
         for i in 0..m {
             for j in self.at.col_ptr[i]..self.at.col_ptr[i + 1] {
                 let k = self.at.row_ind[j];
-                temp[k] = (self.at.val[j] * D[k]).into();
+                temp[k] = (self.at.val[j] * d[k]).into();
             }
             for j in self.at.col_ptr[i]..self.at.col_ptr[i + 1] {
                 let k = self.at.row_ind[j];

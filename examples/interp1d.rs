@@ -1,5 +1,5 @@
 /// Interporation samples
-use std::{env, io, path::PathBuf};
+use std::{env, path::PathBuf};
 
 use numerics::interp::{
     barycentric_1d::BaryRat1D, poly_1d::Poly1D, rational_1d::Rational1D, spline1d::Spline1D, Interp,

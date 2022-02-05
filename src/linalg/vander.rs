@@ -1,6 +1,6 @@
 use crate::MatLinAlgBound;
 
-fn vander<T>(x: &Vec<T>, w: &mut Vec<T>, q: &Vec<T>)
+pub fn vander<T>(x: &Vec<T>, w: &mut Vec<T>, q: &Vec<T>)
 where
     T: MatLinAlgBound,
 {

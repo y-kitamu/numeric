@@ -1,5 +1,3 @@
-use std::mem::swap;
-
 use num::ToPrimitive;
 
 use crate::{MatLinAlgBound, Matrix};
@@ -33,7 +31,7 @@ where
     au: Matrix<T>,
     al: Matrix<T>,
     indx: Vec<usize>,
-    d: f32,
+    _d: f32,
 }
 
 impl<T> Bandec<T>
@@ -41,7 +39,7 @@ where
     T: MatLinAlgBound,
 {
     pub fn new(a: Matrix<T>, m1: usize, m2: usize) -> Self {
-        let TINY = 1.0e-10;
+        let tiny = 1.0e-10;
         let n = a.rows();
         let mut au = a;
         let mut al = Matrix::new(au.rows(), au.cols(), vec![T::zero(); au.rows() * au.cols()]);
@@ -74,8 +72,8 @@ where
                 }
             }
             indx.push(i + 1);
-            if dum.abs() < TINY {
-                dum = TINY;
+            if dum.abs() < tiny {
+                // dum = TINY;
             }
             if i != k {
                 d = -d;
@@ -99,7 +97,7 @@ where
             au,
             al,
             indx,
-            d,
+            _d: d,
         }
     }
 

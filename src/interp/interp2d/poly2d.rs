@@ -5,9 +5,9 @@ use crate::{
 
 pub struct Poly2D<'a> {
     m: usize,
-    n: usize,
+    _n: usize,
     mm: usize,
-    nn: usize,
+    _nn: usize,
     y: &'a Matrix<f64>,
     yv: Vec<f64>,
     x1v: &'a Vec<f64>,
@@ -26,9 +26,9 @@ impl<'a> Poly2D<'a> {
         let x2interp = Poly1D::new(x2v, x2v, np);
         Self {
             m: x1v.len(),
-            n: x2v.len(),
+            _n: x2v.len(),
             mm: mp,
-            nn: np,
+            _nn: np,
             y: ym,
             yv,
             x1v,

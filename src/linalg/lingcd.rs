@@ -17,10 +17,9 @@ where
         itol: usize,
         tol: T,
         itmax: usize,
-        iter: usize,
-        err: T,
+        _iter: usize,
+        _err: T,
     ) {
-        let bkden = 1.0;
         let eps = 1e-14;
         let n = b.len();
         let mut p = vec![T::zero(); n];
@@ -59,8 +58,8 @@ where
         };
 
         let mut err = T::zero();
-        let mut akden = T::zero();
-        let mut bknum = T::zero();
+        let mut akden;
+        let mut bknum;
         let mut bkden: T = 1.0.into();
         while iter < itmax {
             iter += 1;
@@ -69,10 +68,10 @@ where
                 acc + (zval.clone() * rval.clone()).into()
             });
             if iter == 1 {
-                for j in 0..n {
+                (0..n).for_each(|j| {
                     p[j] = z[j];
                     pp[j] = zz[j];
-                }
+                });
             } else {
                 let bk: T = (bknum / bkden).into();
                 for j in 0..n {
@@ -157,7 +156,7 @@ impl<'a, T> NRsparseLingcb<'a, T>
 where
     T: MatLinAlgBound,
 {
-    fn new(mat: &'a NRsparseMat<T>) -> Self {
+    pub fn new(mat: &'a NRsparseMat<T>) -> Self {
         NRsparseLingcb { mat, n: mat.nrows }
     }
 }
@@ -166,7 +165,7 @@ impl<'a, T> Linbcg<T> for NRsparseLingcb<'a, T>
 where
     T: MatLinAlgBound,
 {
-    fn asolve(&self, b: &Vec<T>, x: &mut Vec<T>, itrnsp: usize) {
+    fn asolve(&self, b: &Vec<T>, x: &mut Vec<T>, _itrnsp: usize) {
         for i in 0..self.n {
             let mut diag = 1.0f32;
             for j in self.mat.col_ptr[i]..self.mat.col_ptr[i + 1] {
