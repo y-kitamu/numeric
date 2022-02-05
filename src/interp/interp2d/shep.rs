@@ -1,6 +1,7 @@
 /// Implementation of Shepard Interpolation
 /// (Section 3.7.3 of Numerical Recipes in C)
-use crate::Matrix;
+use crate::{interp::InterpError, Matrix};
+use anyhow::Result;
 
 /// Struct for Shep interpolation
 pub struct Shep<'a> {
@@ -17,23 +18,33 @@ impl<'a> Shep<'a> {
         Self { pts, vals, power }
     }
 
-    pub fn interp(&self, pt: &[f64]) -> f64 {
-        let dists = (0..self.pts.rows()).map(|idx| {
-            let square_dist: f64 = self.pts[idx]
-                .iter()
-                .zip(pt.iter())
-                .map(|(x1, x2)| (x2 - x1) * (x2 - x1))
-                .sum();
-            square_dist.sqrt()
-        });
-        let powers: Vec<f64> = dists.map(|d| d.powf(-self.power)).collect();
+    pub fn interp(&self, pt: &[f64]) -> Result<f64> {
+        if pt.len() != self.pts.cols() {
+            return Err(InterpError::SizeNotMatch())?;
+        }
+        let dists: Vec<f64> = (0..self.pts.rows())
+            .map(|idx| {
+                let square_dist: f64 = self.pts[idx]
+                    .iter()
+                    .zip(pt.iter())
+                    .map(|(x1, x2)| (x2 - x1) * (x2 - x1))
+                    .sum();
+                square_dist.sqrt()
+            })
+            .collect();
+        for (dist, val) in dists.iter().zip(self.vals.iter()) {
+            if *dist < 1e-8 {
+                return Ok(*val);
+            }
+        }
+        let powers: Vec<f64> = dists.iter().map(|d| d.powf(-self.power)).collect();
         let deno: f64 = powers.iter().sum();
         let nume: f64 = powers
             .iter()
             .zip(self.vals.iter())
             .map(|(d, v)| d * v)
             .sum();
-        nume / deno
+        Ok(nume / deno)
     }
 }
 
@@ -51,13 +62,13 @@ mod tests {
 
         (1..3).for_each(|pow| {
             let shep = Shep::new(&pts, &vals, pow.to_f64().unwrap());
-            let res = shep.interp(&[0.5, 0.5]);
+            let res = shep.interp(&[0.5, 0.5]).unwrap();
             assert!((res - 1.0).abs() < 1e-5, "{}", res);
-            let res = shep.interp(&[0.0, 1.0 + 1e-7]);
+            let res = shep.interp(&[0.0, 1.0 + 1e-7]).unwrap();
             assert!((res - 1.0).abs() < 1e-5, "{}", res);
-            let res = shep.interp(&[0.0, 0.0 + 1e-7]);
+            let res = shep.interp(&[0.0, 0.0 + 1e-7]).unwrap();
             assert!((res - 0.0).abs() < 1e-5, "{}", res);
-            let res = shep.interp(&[1.0, 1.0 + 1e-7]);
+            let res = shep.interp(&[1.0, 1.0 + 1e-7]).unwrap();
             assert!((res - 2.0).abs() < 1e-5, "{}", res);
         })
     }

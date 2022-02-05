@@ -13,4 +13,7 @@ pub enum InterpError {
 
     #[error("ZeroDiagonal")]
     ZeroDiagonal(),
+
+    #[error("SizeNotMatch")]
+    SizeNotMatch(),
 }
